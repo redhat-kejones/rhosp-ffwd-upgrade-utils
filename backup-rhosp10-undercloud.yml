@@ -1,4 +1,37 @@
 ---
 - hosts: director
+  become: yes
   tasks:
+
   - name: Create backup directory
+    file:
+      path: /backup
+      state: directory
+      owner: stack
+      group: stack
+
+  - name: Mount a NFS target for backup
+    src: 10.100.0.11:/volume1/trilio_ffwd_target/rhosp_backup
+    path: /backup
+    state: present
+
+  - name: Backup undercloud databases
+    mysql_db:
+      state: dump
+      name: all
+      target: /backup/undercloud-all-databases.sql
+
+  - name: Create tarball of all configs and databases
+    shell: |
+    tar --xattrs --ignore-failed-read -czvf \
+    undercloud-backup-`date +%F`.tgz \
+    /root/undercloud-all-databases.sql \
+    /etc \
+    /var/log \
+    /var/lib/glance \
+    /var/lib/certmonger \
+    /var/lib/docker \
+    /var/lib/registry \
+    /srv/node \
+    /root \
+    /home/stack
