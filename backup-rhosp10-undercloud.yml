@@ -16,4 +16,4 @@
       target: /backup/undercloud-all-databases.sql
 
   - name: Create tarball of all configs and databases
-    shell: "tar --xattrs --ignore-failed-read -czvf undercloud-backup-'date +%F'.tgz /backup/undercloud-all-databases.sql /etc /var/log /var/lib/glance /var/lib/certmonger /var/lib/docker /var/lib/registry /srv/node /root /home/stack"
+    shell: "tar --xattrs --ignore-failed-read -czvf /backup/undercloud-backup-full.tgz /backup/undercloud-all-databases.sql /etc /var/log /var/lib/glance /var/lib/certmonger /var/lib/docker /var/lib/registry /srv/node /root /home/stack"
