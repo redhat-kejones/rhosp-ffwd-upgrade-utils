@@ -9,20 +9,27 @@
       state: mounted
       fstype: nfs
 
-  - name: Backup overcloud controller databases
-    shell: MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "select distinct table_schema from information_schema.tables where engine='innodb' and table_schema != 'mysql';" | xargs mysqldump -uroot -p$MYSQLDBPASS --single-transaction --databases > /backup/openstack_databases-$(date +%F)-$(date +%T).sql
+  - name: Create backup directory	for each controller
+    file:
+      path: /backup/{{ inventory_hostname }}
+      state: directory
+      owner: stack
+      group: stack
 
   - name: Backup overcloud controller databases
-    shell: MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "SELECT CONCAT('\"SHOW GRANTS FOR ''',user,'''@''',host,''';\"') FROM mysql.user where (length(user) > 0 and user NOT LIKE 'root')" | xargs -n1 mysql -uroot -p$MYSQLDBPASS -s -N -e | sed 's/$/;/' > /backup/openstack_databases_grants-$(date +%F)-$(date +%T).sql
+    shell: MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "select distinct table_schema from information_schema.tables where engine='innodb' and table_schema != 'mysql';" | xargs mysqldump -uroot -p$MYSQLDBPASS --single-transaction --databases > /backup/$(hostname)-openstack_databases-$(date +%F)-$(date +%T).sql
+
+  - name: Backup overcloud controller databases
+    shell: MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "SELECT CONCAT('\"SHOW GRANTS FOR ''',user,'''@''',host,''';\"') FROM mysql.user where (length(user) > 0 and user NOT LIKE 'root')" | xargs -n1 mysql -uroot -p$MYSQLDBPASS -s -N -e | sed 's/$/;/' > /backup/$(hostname)-openstack_databases_grants-$(date +%F)-$(date +%T).sql
 
   - name: Backup pacemaker config
-    shell: "pcs config backup --force /backup/pacemaker_controller_backup"
+    shell: "pcs config backup --force /backup/$(hostname)-pacemaker_controller_backup"
 
   - name: Backup overcloud telemetry database
-    shell: "mongodump --oplog --host $(sudo hiera -c /etc/puppet/hiera.yaml mongodb::server::bind_ip) --out /backup/"
+    shell: "mongodump --oplog --host $(sudo hiera -c /etc/puppet/hiera.yaml mongodb::server::bind_ip) --out /backup/{{ inventory_hostname }}/"
 
   - name: Backup overcloud Redis cluster
-    shell: "redis-cli -a $(sudo hiera -c /etc/puppet/hiera.yaml redis::masterauth) -h $(sudo hiera -c /etc/puppet/hiera.yaml redis_vip) bgsave && cp /var/lib/redis/dump.rdb /backup/"
+    shell: "redis-cli -a $(sudo hiera -c /etc/puppet/hiera.yaml redis::masterauth) -h $(sudo hiera -c /etc/puppet/hiera.yaml redis_vip) bgsave && cp /var/lib/redis/dump.rdb /backup/{{ inventory_hostname }}/"
     ignore_errors: true
     #NOTE: this command returns rc 1 even on success it seems
 
