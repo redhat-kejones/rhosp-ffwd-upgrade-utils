@@ -2,18 +2,12 @@
 - hosts: undercloud
   become: yes
   tasks:
-  - name: Create backup directory
-    file:
-      path: /backup
-      state: directory
-      owner: stack
-      group: stack
-
   - name: Mount a NFS target for backup
     mount:
       src: 10.100.0.11:/volume1/trilio_ffwd_target/rhosp_backup
       path: /backup
-      state: present
+      state: mounted
+      fstype: nfs
 
   - name: Backup undercloud databases
     mysql_db:
