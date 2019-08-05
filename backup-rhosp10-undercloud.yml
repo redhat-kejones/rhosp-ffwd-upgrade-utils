@@ -1,0 +1,4 @@
+---
+- hosts: director
+  tasks:
+  - name: Create backup directory
