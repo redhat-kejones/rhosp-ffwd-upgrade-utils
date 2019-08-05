@@ -1,0 +1,28 @@
+---
+- hosts: controller
+  become: yes
+  tasks:
+  - name: Mount a NFS target for backup
+    mount:
+      src: 10.100.0.11:/volume1/trilio_ffwd_target/rhosp_backup
+      path: /backup
+      state: mounted
+      fstype: nfs
+
+  - name: Backup overcloud controller databases
+    shell: "MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "select distinct table_schema from information_schema.tables where engine='innodb' and table_schema != 'mysql';" | xargs mysqldump -uroot -p$MYSQLDBPASS --single-transaction --databases > /backup/openstack_databases-`date +%F`-`date +%T`.sql"
+
+  - name: Backup overcloud controller databases
+    shell: "MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "SELECT CONCAT('\"SHOW GRANTS FOR ''',user,'''@''',host,''';\"') FROM mysql.user where (length(user) > 0 and user NOT LIKE 'root')" | xargs -n1 mysql -uroot -p$MYSQLDBPASS -s -N -e | sed 's/$/;/' > /backup/openstack_databases_grants-`date +%F`-`date +%T`.sql"
+
+  - name: Backup pacemaker config
+    shell: "pcs config backup /backup/pacemaker_controller_backup"
+
+  - name: Backup overcloud telemetry database
+    shell: "mongodump --oplog --host $(sudo hiera -c /etc/puppet/hiera.yaml mongodb::server::bind_ip) --out /backup/"
+
+  - name: Backup overcloud Redis cluster
+    shell: "redis-cli -a $(sudo hiera -c /etc/puppet/hiera.yaml redis::masterauth) -h $(sudo hiera -c /etc/puppet/hiera.yaml redis_vip) bgsave"
+
+  - name: Backup overcloud controller file system configs
+    shell: "tar --ignore-failed-read --xattrs -czvf /backup/$(hostname)-filesystem-$(date '+%Y-%m-%d-%H-%M-%S').tgz /etc /srv/node /var/log /var/lib/nova --exclude /var/lib/nova/instances /var/lib/glance /var/lib/keystone /var/lib/cinder /var/lib/heat /var/lib/heat-config /var/lib/heat-cfntools /var/lib/rabbitmq /var/lib/neutron /var/lib/haproxy /var/lib/openvswitch /var/lib/redis /var/lib/os-collect-config /usr/libexec/os-apply-config /usr/libexec/os-refresh-config /home/heat-admin"
