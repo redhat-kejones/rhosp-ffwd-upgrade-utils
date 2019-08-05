@@ -16,7 +16,7 @@
     shell: MYSQLDBPASS=$(sudo hiera -c /etc/puppet/hiera.yaml mysql::server::root_password) && mysql -uroot -p$MYSQLDBPASS -s -N -e "SELECT CONCAT('\"SHOW GRANTS FOR ''',user,'''@''',host,''';\"') FROM mysql.user where (length(user) > 0 and user NOT LIKE 'root')" | xargs -n1 mysql -uroot -p$MYSQLDBPASS -s -N -e | sed 's/$/;/' > /backup/openstack_databases_grants-$(date +%F)-$(date +%T).sql
 
   - name: Backup pacemaker config
-    shell: "pcs config backup /backup/pacemaker_controller_backup"
+    shell: "pcs config backup --force /backup/pacemaker_controller_backup"
 
   - name: Backup overcloud telemetry database
     shell: "mongodump --oplog --host $(sudo hiera -c /etc/puppet/hiera.yaml mongodb::server::bind_ip) --out /backup/"
