@@ -22,7 +22,9 @@
     shell: "mongodump --oplog --host $(sudo hiera -c /etc/puppet/hiera.yaml mongodb::server::bind_ip) --out /backup/"
 
   - name: Backup overcloud Redis cluster
-    shell: "redis-cli -a $(sudo hiera -c /etc/puppet/hiera.yaml redis::masterauth) -h $(sudo hiera -c /etc/puppet/hiera.yaml redis_vip) bgsave"
+    shell: "redis-cli -a $(sudo hiera -c /etc/puppet/hiera.yaml redis::masterauth) -h $(sudo hiera -c /etc/puppet/hiera.yaml redis_vip) bgsave && cp /var/lib/redis/dump.rdb /backup/"
+    ignore_errors: true
+    #NOTE: this command returns rc 1 even on success it seems
 
   - name: Backup overcloud controller file system configs
     shell: "tar --ignore-failed-read --xattrs -czvf /backup/$(hostname)-filesystem-$(date '+%Y-%m-%d-%H-%M-%S').tgz /etc /srv/node /var/log /var/lib/nova --exclude /var/lib/nova/instances /var/lib/glance /var/lib/keystone /var/lib/cinder /var/lib/heat /var/lib/heat-config /var/lib/heat-cfntools /var/lib/rabbitmq /var/lib/neutron /var/lib/haproxy /var/lib/openvswitch /var/lib/redis /var/lib/os-collect-config /usr/libexec/os-apply-config /usr/libexec/os-refresh-config /home/heat-admin"
