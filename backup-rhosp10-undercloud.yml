@@ -1,5 +1,5 @@
 ---
-- hosts: director
+- hosts: undercloud
   become: yes
   tasks:
 
