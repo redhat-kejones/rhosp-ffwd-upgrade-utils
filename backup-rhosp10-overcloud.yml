@@ -9,7 +9,7 @@
       state: mounted
       fstype: nfs
 
-  - name: Create backup directory	for each controller
+  - name: Create backup directory for each controller
     file:
       path: /backup/{{ inventory_hostname }}
       state: directory
