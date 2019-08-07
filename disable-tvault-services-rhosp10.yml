@@ -1,5 +1,5 @@
 ---
-- hosts: controller,compute
+- hosts: controller
   become: yes
   tasks:
     - name: Disable Trilio Vault Datamover service
