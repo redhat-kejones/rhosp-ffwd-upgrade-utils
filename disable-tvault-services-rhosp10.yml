@@ -1,0 +1,9 @@
+---
+- hosts: controller,compute
+  become: yes
+  tasks:
+    - name: Disable Trilio Vault Datamover service
+      service:
+        name: tvault-contego
+        state: stopped
+        enabled: no
