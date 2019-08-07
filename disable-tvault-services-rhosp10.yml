@@ -7,3 +7,24 @@
         name: tvault-contego
         state: stopped
         enabled: no
+    - name: Uninstall Trilio packages
+      yum:
+        name: tvault-contego,tvault-contego-api,tvault-horizon-plugin
+        state: absent
+    - name: Restart httpd
+      service:
+        name: httpd
+        state: restarted
+
+- hosts: compute
+  become: yes
+  tasks:
+    - name: Disable Trilio Vault Datamover service
+      service:
+        name: tvault-contego
+        state: stopped
+        enabled: no
+    - name: Uninstall Trilio packages
+      yum:
+        name: tvault-contego
+        state: absent
