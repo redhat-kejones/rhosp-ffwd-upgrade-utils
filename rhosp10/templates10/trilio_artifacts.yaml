@@ -1,0 +1,5 @@
+# Heat environment to deploy artifacts via Swift Temp URL(s)
+parameter_defaults:
+  DeployArtifactURLs:
+    - 'http://192.168.2.5:8080/v1/AUTH_d3cba68a05354f0a8f603af44c0e5b89/overcloud-artifacts/triliorepo.tgz?temp_url_sig=34f8c6007ea356f47b3f8577a2fa89856b7e9951&temp_url_expires=1590261990'
+    - 'http://192.168.2.5:8080/v1/AUTH_d3cba68a05354f0a8f603af44c0e5b89/overcloud-artifacts/puppet-triliovault-3.0.152-3.0.noarch.rpm?temp_url_sig=048edc68979084f2d157e43b6248c217b6eb2410&temp_url_expires=1590261996'
