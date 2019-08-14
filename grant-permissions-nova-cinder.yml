@@ -1,0 +1,20 @@
+---
+- hosts: Controller,Compute
+  become: yes
+  tasks:
+  - name: add libvirt section to tvault-contego.conf
+    blockinfile:
+      path: /var/lib/config-data/puppet-generated/triliodm/etc/tvault-contego/tvault-contego.conf
+      block: |
+        [libvirt]
+        images_rbd_ceph_conf = /etc/ceph/ceph.conf
+        rbd_user = openstack
+
+  - name: set acls for nova user on ceph configuration and key on overcloud host
+    shell: setfacl -m u:nova:r /etc/ceph/ceph.client.openstack.keyring /etc/ceph/ceph.conf
+
+  - name: restart trilio_datamover container
+    shell: docker restart trilio_datamover
+
+  - name: set acls for nova user on ceph configuration and keyring in trilio_datamover container
+    shell: docker exec -u root trilio_datamover setfacl -m u:nova:r /etc/ceph/ceph.client.openstack.keyring /etc/ceph/ceph.conf
